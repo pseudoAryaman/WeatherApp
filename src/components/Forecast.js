@@ -10,7 +10,7 @@ function Forecast({ weather }) {
   useEffect(() => {
     const fetchForecastData = async () => {
       const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
-      const url = `https://api.shecodes.io/weather/v1/forecast?query=${data.city}&key=${apiKey}&units=metric`;
+      const url = `https://api.shecodes.iogit /weather/v1/forecast?query=${data.city}&key=${apiKey}&units=metric`;
 
       try {
         const response = await axios.get(url);
