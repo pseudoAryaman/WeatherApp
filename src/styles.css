@@ -376,3 +376,13 @@ body {
     width: 100%;
   }
 }
+footer {
+  width: 100%;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #8fc9da;
+}

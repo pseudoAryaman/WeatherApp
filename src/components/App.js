@@ -14,66 +14,84 @@ function App() {
     error: false,
   });
 
+  // Format current date
   const toDate = () => {
     const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December",
     ];
     const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
+      "Sunday","Monday","Tuesday","Wednesday",
+      "Thursday","Friday","Saturday",
     ];
 
     const currentDate = new Date();
-    const date = `${days[currentDate.getDay()]} ${currentDate.getDate()} ${
+    return `${days[currentDate.getDay()]} ${currentDate.getDate()} ${
       months[currentDate.getMonth()]
     }`;
-    return date;
   };
 
+  // Convert API response to your UI format
+  const formatWeatherData = (data) => ({
+    city: data.name,
+    country: data.sys.country,
+    temperature: {
+      current: data.main.temp,
+      humidity: data.main.humidity,
+    },
+    wind: {
+      speed: data.wind.speed,
+    },
+    condition: {
+      description: data.weather[0].description,
+      icon_url: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
+    },
+  });
+
+  // Search handler
   const search = async (event) => {
     event.preventDefault();
-    if (event.type === "click" || (event.type === "keypress" && event.key === "Enter")) {
-      setWeather({ ...weather, loading: true });
-      const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
-      const url = `https://api.shecodes.io/weather/v1/current?query=${query}&key=${apiKey}`;
+
+    if (
+      event.type === "click" ||
+      (event.type === "keypress" && event.key === "Enter")
+    ) {
+      if (!query.trim()) return;
+
+      setWeather((prev) => ({ ...prev, loading: true, error: false }));
+
+      const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${query.trim()}&appid=${apiKey}&units=metric`;
 
       try {
         const res = await axios.get(url);
-        setWeather({ data: res.data, loading: false, error: false });
+        const formattedData = formatWeatherData(res.data);
+
+        setWeather({ data: formattedData, loading: false, error: false });
       } catch (error) {
-        setWeather({ ...weather, data: {}, error: true });
-        console.error("Error fetching weather data:", error);
+        console.error("Error fetching weather data:", error.response?.data);
+        setWeather({ data: {}, loading: false, error: true });
       }
     }
   };
 
+  // Initial load (default city)
   useEffect(() => {
     const fetchData = async () => {
-      const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
-      const url = `https://api.shecodes.io/weather/v1/current?query=Rabat&key=${apiKey}`;
+      const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=Noida&appid=${apiKey}&units=metric`;
 
       try {
         const response = await axios.get(url);
-        setWeather({ data: response.data, loading: false, error: false });
+        const formattedData = formatWeatherData(response.data);
+
+        setWeather({ data: formattedData, loading: false, error: false });
       } catch (error) {
+        console.error(
+          "Error fetching initial weather data:",
+          error.response?.data
+        );
         setWeather({ data: {}, loading: false, error: true });
-        console.error("Error fetching initial weather data:", error);
       }
     };
 
@@ -82,9 +100,10 @@ function App() {
 
   return (
     <div className="App">
-      {/* SearchEngine component */}
+      {/* Search */}
       <SearchEngine query={query} setQuery={setQuery} search={search} />
 
+      {/* Loading */}
       {weather.loading && (
         <>
           <br />
@@ -93,20 +112,19 @@ function App() {
         </>
       )}
 
+      {/* Error */}
       {weather.error && (
         <>
           <br />
           <br />
           <span className="error-message">
-            <span style={{ fontFamily: "font" }}>
-              Sorry, city not found. Please try again.
-            </span>
+            Sorry, city not found. Please try again.
           </span>
         </>
       )}
 
-      {weather && weather.data && weather.data.condition && (
-        // Forecast component
+      {/* Success */}
+      {weather.data && weather.data.condition && (
         <Forecast weather={weather} toDate={toDate} />
       )}
     </div>

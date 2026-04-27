@@ -4,24 +4,35 @@ import ReactAnimatedWeather from "react-animated-weather";
 
 function Forecast({ weather }) {
   const { data } = weather;
-  const [forecastData, setForecastData] = useState([]);
-  const [isCelsius, setIsCelsius] = useState(true); // Track temperature unit
+const [forecastData, setForecastData] = useState([]);
+const [isCelsius, setIsCelsius] = useState(true);
 
-  useEffect(() => {
-    const fetchForecastData = async () => {
-      const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
-      const url = `https://api.shecodes.iogit /weather/v1/forecast?query=${data.city}&key=${apiKey}&units=metric`;
+useEffect(() => {
+  if (!data?.name) return; // important
 
-      try {
-        const response = await axios.get(url);
-        setForecastData(response.data.daily);
-      } catch (error) {
-        console.error("Error fetching forecast data:", error);
-      }
-    };
+  const fetchForecastData = async () => {
+    const apiKey = process.env.REACT_APP_OPENWEATHER_API_KEY;
 
-    fetchForecastData();
-  }, [data.city]);
+    try {
+      const response = await axios.get(
+        "https://api.openweathermap.org/data/2.5/forecast",
+        {
+          params: {
+            q: `${data.name},${data.sys.country}`, // correct format
+            appid: apiKey,
+            units: "metric"
+          }
+        }
+      );
+
+      setForecastData(response.data.list);
+    } catch (error) {
+      console.log(error.response?.data);
+    }
+  };
+
+  fetchForecastData();
+}, [data]);
 
   const formatDay = (dateString) => {
     const options = { weekday: "short" };
